@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Parking Detection</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            overflow: auto;
+            text-align: center;
+           
+        }
+        h1 {
+            font-size: 3rem;
+            margin: 20px 0;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        h2 {
+            font-size: 1.2rem;
+            margin: 0 0 40px 0;
+            color: #d1d8e0;
+        }
+        .dropzone {
+            width: 350px;
+            height: 250px;
+            border: 3px dashed #ffffff;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        .dropzone:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            border-color: #ffffff;
+        }
+        .file-input {
+            display: none;
+        }
+        .file-label {
+            margin: 10px 0;
+            padding: 12px 25px;
+            font-size: 1rem;
+            color: #ffffff;
+            background-color: #4a90e2;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+            display: inline-block;
+        }
+        .file-label:hover {
+            background-color: #337ab7;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+        }
+        button {
+            margin: 10px 10px;
+            padding: 12px 25px;
+            font-size: 1rem;
+            color: #ffffff;
+            background-color: #4a90e2;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+        }
+        button:hover {
+            background-color: #337ab7;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+        }
+        .image-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            max-width: 90%;
+            overflow: auto;
+            border-radius: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.1);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+        .image-container img {
+            max-width: 100%;
+            max-height: 70vh;
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+            display: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .image-container img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        footer {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #d1d8e0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Car Parking Detection</h1>
+    <h2>Powered By MobiiWorld</h2>
+    <div class="dropzone" id="dropzone">Drag and drop an image here</div>
+    <label class="file-label" for="file-input">Browse File</label>
+    <input type="file" id="file-input" class="file-input" accept="image/*">
+    <button onclick="uploadImage()">Run</button>
+    <button onclick="resetPage()">Reset</button>
+    <div class="image-container">
+        <img id="uploadedImage" src="" alt="Uploaded Image"/>
+        <img id="processedImage" src="" alt="Processed Image"/>
+    </div>
+    <footer>
+        &copy; 2024 MobiiWorld. All rights reserved.
+    </footer>
+
+    <script>
+        let dropzone = document.getElementById('dropzone');
+        let fileInput = document.getElementById('file-input');
+        let selectedFile;
+
+        dropzone.ondragover = function(event) {
+            event.preventDefault();
+        }
+
+        dropzone.ondrop = function(event) {
+            event.preventDefault();
+            selectedFile = event.dataTransfer.files[0];
+            dropzone.style.border = '3px solid #ffffff';
+            showUploadedImage();
+        }
+
+        fileInput.onchange = function(event) {
+            selectedFile = event.target.files[0];
+            showUploadedImage();
+        }
+
+        function showUploadedImage() {
+            if (selectedFile) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    let uploadedImage = document.getElementById('uploadedImage');
+                    uploadedImage.src = e.target.result;
+                    uploadedImage.style.display = 'block';
+                }
+                reader.readAsDataURL(selectedFile);
+            }
+        }
+
+        function uploadImage() {
+            if (selectedFile) {
+                let formData = new FormData();
+                formData.append('file', selectedFile);
+
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.blob())
+                .then(blob => {
+                    let processedImage = document.getElementById('processedImage');
+                    processedImage.src = URL.createObjectURL(blob);
+                    processedImage.style.display = 'block';
+                })
+                .catch(error => console.error('Error:', error));
+            } else {
+                alert('Please select or drop a file first');
+            }
+        }
+
+        function resetPage() {
+            selectedFile = null;
+            dropzone.style.border = '3px dashed #ffffff';
+            let uploadedImage = document.getElementById('uploadedImage');
+            let processedImage = document.getElementById('processedImage');
+            uploadedImage.src = "";
+            processedImage.src = "";
+            uploadedImage.style.display = 'none';
+            processedImage.style.display = 'none';
+            fileInput.value = null;
+        }
+    </script>
+</body>
+</html>
